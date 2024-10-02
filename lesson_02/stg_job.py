@@ -6,6 +6,7 @@ import fastavro
 from flask import Flask, request
 
 
+HOST = '127.0.0.1'
 PORT = 8082
 app = Flask(__name__)
 
@@ -57,4 +58,4 @@ def write_to_stg() -> Tuple[str, int]:
 
 
 if __name__ == "__main__":
-    app.run(port=PORT)
+    app.run(host=HOST, port=PORT)

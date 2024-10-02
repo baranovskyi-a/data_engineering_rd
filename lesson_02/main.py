@@ -6,6 +6,7 @@ import requests
 from flask import Flask, request
 
 
+HOST = '127.0.0.1'
 PORT = 8081
 REQUEST_TIMEOUT_SECONDS = 10
 AUTH_TOKEN = os.getenv("AUTH_TOKEN")
@@ -54,4 +55,4 @@ def load_sales() -> Tuple[str, int]:
 
 
 if __name__ == "__main__":
-    app.run(port=PORT)
+    app.run(host=HOST, port=PORT)
