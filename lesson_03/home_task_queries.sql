@@ -10,16 +10,16 @@
 */
 -- SQL code goes here...
 SELECT
-	c.name category,
-	count(fc.film_id) films_count
+    c.name category,
+    count(fc.film_id) films_count
 FROM
-	public.film_category fc
+    public.film_category fc
 LEFT JOIN public.category c ON
-	fc.category_id = c.category_id
+    fc.category_id = c.category_id
 GROUP BY
-	c.name
+    c.name
 ORDER BY
-	films_count DESC;
+    films_count DESC;
 
 
 /*
@@ -30,32 +30,32 @@ ORDER BY
 -- SQL code goes here...
 -- actors by film rentals amount
 WITH ar AS (
-	SELECT
-		count(r.rental_id) film_rentals,
-		fa.actor_id
-	FROM
-		public.rental r
-	LEFT JOIN public.inventory i ON
-		i.inventory_id = r.inventory_id
-	LEFT JOIN public.film_actor fa ON
-		i.film_id = fa.film_id
-	GROUP BY
-		fa.actor_id
-	ORDER BY
-		film_rentals DESC
-	LIMIT 10
+    SELECT
+        count(r.rental_id) film_rentals,
+        fa.actor_id
+    FROM
+        public.rental r
+    LEFT JOIN public.inventory i ON
+        i.inventory_id = r.inventory_id
+    LEFT JOIN public.film_actor fa ON
+        i.film_id = fa.film_id
+    GROUP BY
+        fa.actor_id
+    ORDER BY
+        film_rentals DESC
+    LIMIT 10
 )
 
 SELECT
-	a.first_name,
-	a.last_name,
-	ar.film_rentals
+    a.first_name,
+    a.last_name,
+    ar.film_rentals
 FROM
-	ar
+    ar
 LEFT JOIN public.actor a ON
-	ar.actor_id = a.actor_id
+    ar.actor_id = a.actor_id
 ORDER BY
-	ar.film_rentals DESC;
+    ar.film_rentals DESC;
 
 
 /*
@@ -65,31 +65,31 @@ ORDER BY
 */
 -- SQL code goes here...
 WITH top_category AS (
-	SELECT
-		sum(amount) category_sales,
-		fc.category_id
-	FROM
-		public.payment p
-	LEFT JOIN public.rental r ON
-		p.rental_id = r.rental_id
-	LEFT JOIN public.inventory i ON
-		r.inventory_id = i.inventory_id
-	LEFT JOIN public.film_category fc ON
-		i.film_id = fc.film_id
-	GROUP BY
-		fc.category_id
-	ORDER BY
-		category_sales DESC
-	LIMIT 1
+    SELECT
+        sum(amount) category_sales,
+        fc.category_id
+    FROM
+        public.payment p
+    LEFT JOIN public.rental r ON
+        p.rental_id = r.rental_id
+    LEFT JOIN public.inventory i ON
+        r.inventory_id = i.inventory_id
+    LEFT JOIN public.film_category fc ON
+        i.film_id = fc.film_id
+    GROUP BY
+        fc.category_id
+    ORDER BY
+        category_sales DESC
+    LIMIT 1
 )
 
 SELECT
-	tc.category_sales,
-	c.name category
+    tc.category_sales,
+    c.name category
 FROM
-	top_category tc
+    top_category tc
 LEFT JOIN public.category c ON
-	tc.category_id = c.category_id
+    tc.category_id = c.category_id
 
 
 /*
@@ -99,13 +99,13 @@ LEFT JOIN public.category c ON
 */
 -- SQL code goes here...
 SELECT
-	f.title
+    f.title
 FROM
-	public.inventory i
+    public.inventory i
 RIGHT JOIN public.film f ON
-	i.film_id = f.film_id
+    i.film_id = f.film_id
 WHERE
-	i.film_id IS NULL
+    i.film_id IS NULL
 
 
 /*
@@ -114,32 +114,32 @@ WHERE
 */
 -- SQL code goes here...
 WITH actor_children_films AS (
-	SELECT
-		fa.actor_id,
-		count(fa.actor_id) children_films_amount
-	FROM
-		public.film f
-	LEFT JOIN public.film_category fc ON
-		f.film_id = fc.film_id
-	LEFT JOIN public.category c ON
-		fc.category_id = c.category_id
-	LEFT JOIN public.film_actor fa ON
-		f.film_id = fa.film_id
-	WHERE
-		c.name = 'Children'
-	GROUP BY
-		fa.actor_id
-	ORDER BY
-		children_films_amount DESC
-	LIMIT 3
+    SELECT
+        fa.actor_id,
+        count(fa.actor_id) children_films_amount
+    FROM
+        public.film f
+    LEFT JOIN public.film_category fc ON
+        f.film_id = fc.film_id
+    LEFT JOIN public.category c ON
+        fc.category_id = c.category_id
+    LEFT JOIN public.film_actor fa ON
+        f.film_id = fa.film_id
+    WHERE
+        c.name = 'Children'
+    GROUP BY
+        fa.actor_id
+    ORDER BY
+        children_films_amount DESC
+    LIMIT 3
 )
 
 SELECT
-	a.first_name,
-	a.last_name,
-	acf.children_films_amount
+    a.first_name,
+    a.last_name,
+    acf.children_films_amount
 FROM
-	actor_children_films acf
+    actor_children_films acf
 LEFT JOIN public.actor a ON
-	acf.actor_id = a.actor_id
+    acf.actor_id = a.actor_id
 
