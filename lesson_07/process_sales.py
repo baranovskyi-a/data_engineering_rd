@@ -20,9 +20,9 @@ DEFAULT_ARGS = {
     'max_active_runs': 1,
 }
 
-def run_extract_job(**kwargs):
+def run_extract_job(job_host, job_port, **kwargs):
     resp = requests.post(
-        url = f'http://{EXTRACT_JOB_HOST}:{EXTRACT_JOB_PORT}/',
+        url = f'http://{job_host}:{job_port}/',
         json={
             "date": kwargs['ds'],
             "raw_dir": os.path.join(BASE_DIR, "raw", "sales", kwargs['ds']),
@@ -32,9 +32,9 @@ def run_extract_job(**kwargs):
     assert resp.status_code == 201
 
 
-def run_convert_job(**kwargs):
+def run_convert_job(job_host, job_port, **kwargs):
     resp = requests.post(
-        url = f'http://{CONVERT_JOB_HOST}:{CONVERT_JOB_PORT}/',
+        url = f'http://{job_host}:{job_port}/',
         json={
             "raw_dir": os.path.join(BASE_DIR, "raw", "sales", kwargs['ds']),
             "stg_dir": os.path.join(BASE_DIR, "stg", "sales", kwargs['ds']),
@@ -56,12 +56,14 @@ with DAG(
         task_id='extract_data_from_api',
         python_callable=run_extract_job,
         provide_context=True,
+        op_kwargs={'job_host': EXTRACT_JOB_HOST, 'job_port': EXTRACT_JOB_PORT}
     )
 
     convert = PythonOperator(
         task_id='convert_to_avro',
         python_callable=run_convert_job,
         provide_context=True,
+        op_kwargs={'job_host': CONVERT_JOB_HOST, 'job_port': CONVERT_JOB_PORT}
     )
 
     extract >> convert
