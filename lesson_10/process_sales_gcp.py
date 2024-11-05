@@ -11,6 +11,7 @@ from airflow.providers.google.cloud.transfers.local_to_gcs import LocalFilesyste
 from airflow import macros
 
 
+FAKE_API_URL = 'https://fake-api-vycpfa6oca-uc.a.run.app/sales'
 BASE_DIR = Variable.get('SALES_BASE_DIR')
 AUTH_TOKEN = Variable.get('secret_fake_api_token')
 REQUEST_TIMEOUT_SECONDS = 10
@@ -24,11 +25,12 @@ DEFAULT_ARGS = {
 }
 
 
-def run_extract_job(raw_dir: str, ds: str) -> None:
+def run_extract_job(raw_dir: str, url: str, ds: str) -> None:
     '''
-        Loads sales from https://fake-api-vycpfa6oca-uc.a.run.app/sales and 
+        Loads sales from fake api and 
             saves them to raw_dir in .csv format. All data in raw_dir will be rewrited
         Params:
+            url - str
             ds - date in "yyyy-mm-dd" format
             raw_dir - dir to save
     '''
@@ -37,7 +39,7 @@ def run_extract_job(raw_dir: str, ds: str) -> None:
     while True:
         # request current page
         response = requests.get(
-            url='https://fake-api-vycpfa6oca-uc.a.run.app/sales',
+            url=url,
             params={'date': ds, 'page': page},
             headers={'Authorization': AUTH_TOKEN},
             timeout=REQUEST_TIMEOUT_SECONDS
@@ -70,7 +72,7 @@ with DAG(
         task_id='extract_data_from_api',
         python_callable=run_extract_job,
         provide_context=True,
-        op_kwargs={'raw_dir': BASE_DIR}
+        op_kwargs={'raw_dir': BASE_DIR, 'url': FAKE_API_URL}
     )
     load = LocalFilesystemToGCSOperator(
         task_id='load_to_gcp',
