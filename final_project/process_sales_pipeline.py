@@ -8,7 +8,6 @@ DEFAULT_ARGS = {
     'email_on_retry': False,
     'retries': 1,
     'retry_delay': 30,
-    'max_active_runs': 1,
 }
 
 DELETE_QUERY = '''
@@ -39,9 +38,10 @@ WHERE purchase_date = DATE('{{ ds }}')
 with DAG(
         dag_id='process_sales_pipeline',
         start_date=datetime(2022, 9, 1),
-        end_date=datetime(2022, 10, 1),
+        end_date=datetime(2022, 10, 2),
         schedule_interval="0 1 * * *",
         catchup=True,
+        max_active_runs=1,
         default_args=DEFAULT_ARGS,
 ) as dag:
     clear_silver_tab = BigQueryExecuteQueryOperator(
