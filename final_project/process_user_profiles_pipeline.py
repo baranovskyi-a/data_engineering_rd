@@ -10,14 +10,16 @@ DEFAULT_ARGS = {
 
 MERGE_TO_SILVER_QUERY = '''
 MERGE INTO `de-07-andrii-baranovskyi-2.fnl_prjct_silver.user_profiles` T
-USING (SELECT 
-  email,
-  full_name,
-  state,
-  DATE(birth_date) birth_date,
-  REGEXP_REPLACE(phone_number, r'[().-]', '') AS phone_number
-FROM 
-  `de-07-andrii-baranovskyi-2.fnl_prjct_bronze.user_profiles`) S
+USING (
+  SELECT 
+    email,
+    full_name,
+    state,
+    DATE(birth_date) birth_date,
+    REGEXP_REPLACE(phone_number, r'[().-]', '') AS phone_number
+  FROM 
+    `de-07-andrii-baranovskyi-2.fnl_prjct_bronze.user_profiles`
+) S
 ON T.email = S.email
 WHEN MATCHED THEN
   UPDATE SET 
