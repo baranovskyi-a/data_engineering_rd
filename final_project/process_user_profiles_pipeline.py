@@ -30,8 +30,6 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED BY TARGET THEN
   INSERT (email, full_name, state, birth_date, phone_number)
   VALUES(S.email, S.full_name, S.state, S.birth_date, S.phone_number)
-WHEN NOT MATCHED BY SOURCE THEN
-  DELETE
 '''
 
 with DAG(

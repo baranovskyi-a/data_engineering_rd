@@ -61,8 +61,6 @@ WHEN MATCHED THEN
 WHEN NOT MATCHED BY TARGET THEN
   INSERT (client_id, first_name, last_name, email, registration_date, state)
   VALUES(S.client_id, S.first_name, S.last_name, S.email, S.registration_date, S.state)
-WHEN NOT MATCHED BY SOURCE THEN
-  DELETE
 '''
 
 
@@ -112,5 +110,5 @@ with DAG(
         use_legacy_sql=False,
         gcp_conn_id='gcp_conn'
     )
-    
+
     clear_bronze_tab >> load_to_bronze >> fill_dump_date >> merge_to_silver
