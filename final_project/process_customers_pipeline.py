@@ -1,8 +1,9 @@
 from datetime import datetime
 from airflow import DAG
+from airflow.models import Variable
 from airflow.providers.google.cloud.operators.bigquery import BigQueryExecuteQueryOperator
 from airflow.providers.google.cloud.transfers.gcs_to_bigquery import GCSToBigQueryOperator
-
+from process_customers_queries import CLEAR_BRONZE_TAB_QUERY, FILL_DUMP_DATE_QUERY, MERGE_TO_SILVER_QUERY
 
 DEFAULT_ARGS = {
     'depends_on_past': True,
@@ -12,7 +13,8 @@ DEFAULT_ARGS = {
     'retry_delay': 30,
 }
 
-GCS_BUCKET = 'fnl_prjct_raw'
+GCS_BUCKET = Variable.get('GCS_BUCKET')
+BRONZE_CUSTOMERS_TAB = Variable.get('BRONZE_CUSTOMERS_TAB')
 CUSTOMERS_FOLDER_PATTERN = \
     'customers/'\
     + '-'.join([
@@ -21,47 +23,6 @@ CUSTOMERS_FOLDER_PATTERN = \
         '{{ macros.ds_format(ds, "%Y-%m-%d", "%-d") }}'
     ])\
     + '/*.csv'
-
-CLEAR_BRONZE_TAB_QUERY = '''
-DELETE 
-FROM `de-07-andrii-baranovskyi-2.fnl_prjct_bronze.customers` 
-WHERE 
-    dump_date = DATE('{{ ds }}')
-    OR dump_date IS NULL
-'''
-
-FILL_DUMP_DATE_QUERY = '''
-UPDATE `de-07-andrii-baranovskyi-2.fnl_prjct_bronze.customers` 
-SET dump_date = DATE('{{ ds }}')
-WHERE dump_date is NULL
-'''
-
-MERGE_TO_SILVER_QUERY = '''
-MERGE INTO `de-07-andrii-baranovskyi-2.fnl_prjct_silver.customers` T
-USING (
-  SELECT 
-  DISTINCT 
-    CAST(Id AS int64) client_id,
-    FirstName first_name,
-    LastName last_name,
-    Email email,
-    DATE(RegistrationDate) registration_date,
-    State state
-  FROM `de-07-andrii-baranovskyi-2.fnl_prjct_bronze.customers` 
-  WHERE dump_date = DATE('{{ ds }}')
-) S
-ON T.client_id = S.client_id
-WHEN MATCHED THEN
-  UPDATE SET 
-    first_name = S.first_name,
-    last_name = S.last_name,
-    email = S.email,
-    registration_date = S.registration_date,
-    state = S.state
-WHEN NOT MATCHED BY TARGET THEN
-  INSERT (client_id, first_name, last_name, email, registration_date, state)
-  VALUES(S.client_id, S.first_name, S.last_name, S.email, S.registration_date, S.state)
-'''
 
 
 with DAG(
@@ -83,7 +44,7 @@ with DAG(
         task_id='load_to_bronze',
         bucket=GCS_BUCKET,
         source_objects=CUSTOMERS_FOLDER_PATTERN,
-        destination_project_dataset_table='de-07-andrii-baranovskyi-2.fnl_prjct_bronze.customers',
+        destination_project_dataset_table=BRONZE_CUSTOMERS_TAB,
         schema_fields=[
             {'name': 'Id', 'type': 'STRING', 'mode': 'NULLABLE'},
             {'name': 'FirstName', 'type': 'STRING', 'mode': 'NULLABLE'},
